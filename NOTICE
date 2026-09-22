@@ -1,0 +1,29 @@
+TraceVerity — Process Intelligence Workbench
+Data and third-party notices
+
+Project-authored source code and documentation in this public distribution are
+licensed under the MIT License in LICENSE.
+
+BPI Challenge 2012 dataset
+--------------------------
+Dataset: BPI Challenge 2012
+Creator: Boudewijn van Dongen
+Publisher: Eindhoven University of Technology
+DOI: 10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f
+Official landing page: https://data.4tu.nl/articles/dataset/BPI_Challenge_2012/12689204
+Licence identified by the official dataset metadata: 4TU General Terms of Use
+
+The original BPI Challenge 2012 dataset is not included in this repository and
+is not licensed under TraceVerity's MIT License. Users obtain the source data
+from the official repository and remain responsible for the source terms. This
+project does not relicense the dataset. Aggregate process metrics shown in the
+README and public verification summary are analytical results produced by the
+deterministic Core.
+
+Third-party software and model boundary
+---------------------------------------
+Python and JavaScript dependencies are referenced through pyproject.toml,
+uv.lock, web/package.json, and web/package-lock.json and retain their own
+licences. The llama.cpp runtime, Qwen model files, Power BI Desktop, source
+dataset archive, generated DuckDB database, generated analytics CSV files, and
+local PBIX report are not bundled in this public distribution.

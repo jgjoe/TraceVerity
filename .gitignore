@@ -1,0 +1,34 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+.env
+.env.*
+
+# Dataset and generated local analytical state
+data/raw/
+data/processed/
+*.duckdb
+*.duckdb.wal
+analytics/powerbi/data/
+analytics/powerbi/*.pbix
+
+# Local model/runtime artifacts
+*.gguf
+
+# Web dependencies and build/test output
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+
+# Public distribution exposes only the curated aggregate summary.
+evidence/*
+!evidence/public-verification-summary.json
+
+# Local tooling/editor artifacts
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,28 @@
+// Thin display measures over authoritative exported facts.
+Cases = MAX('Summary'[case_count])
+
+Raw Events = MAX('Summary'[raw_event_count])
+
+Analysis Events = MAX('Summary'[analysis_event_count])
+
+Variants = MAX('Summary'[variant_count])
+
+Direct-Follow Occurrences = MAX('Summary'[direct_follow_count])
+
+Cycle Time P50 (ms) = MAX('Summary'[cycle_time_p50_ms])
+
+Cycle Time P90 (ms) = MAX('Summary'[cycle_time_p90_ms])
+
+// Observed event gap — not true queue waiting.
+Observed Gap P50 (ms) = MAX('Summary'[observed_gap_p50_ms])
+
+Observed Gap P90 (ms) = MAX('Summary'[observed_gap_p90_ms])
+
+Cases With Rework = MAX('Summary'[cases_with_rework])
+
+Rework Events = MAX('Summary'[aggregate_rework_event_count])
+
+// Configured 604800000 ms test scenario; not a claimed BPIC12 business SLA.
+SLA Violations = MAX('Summary'[sla_violation_case_count])
+
+SLA Violation Share = MAX('Summary'[sla_violation_case_share])

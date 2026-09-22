@@ -1,0 +1,105 @@
+{
+  "schema_version": "slice1-evaluation-cases-v1",
+  "cases": [
+    {
+      "id": "log-summary-scalar",
+      "type": "exact_log_scalar",
+      "mandatory": true,
+      "question": "How many cases are in the bpic2012 log? Return the exact case_count fact.",
+      "gold_calls": [
+        {"tool": "describe_log", "arguments": {"log_id": "bpic2012"}}
+      ],
+      "expected_fact_names": ["case_count"]
+    },
+    {
+      "id": "top-variants",
+      "type": "top_k_variant_ranking",
+      "mandatory": false,
+      "question": "What are the top two bpic2012 variants by descending case count? Return variant_1 and variant_2.",
+      "gold_calls": [
+        {"tool": "list_variants", "arguments": {"log_id": "bpic2012", "order_by": "case_count_desc", "limit": 2}}
+      ],
+      "expected_fact_names": ["variant_1", "variant_2"]
+    },
+    {
+      "id": "cycle-time-p90",
+      "type": "cycle_time_statistic",
+      "mandatory": false,
+      "question": "What is the exact p90 case cycle time in milliseconds for bpic2012? Return cycle_time_p90_ms.",
+      "gold_calls": [
+        {"tool": "describe_log", "arguments": {"log_id": "bpic2012"}}
+      ],
+      "expected_fact_names": ["cycle_time_p90_ms"]
+    },
+    {
+      "id": "top-transitions",
+      "type": "transition_ranking",
+      "mandatory": false,
+      "question": "What are the two most frequent direct-follow transitions in bpic2012? Return transition_1 and transition_2.",
+      "gold_calls": [
+        {"tool": "list_transitions", "arguments": {"log_id": "bpic2012", "order_by": "transition_count_desc", "limit": 2}}
+      ],
+      "expected_fact_names": ["transition_1", "transition_2"]
+    },
+    {
+      "id": "rework-summary",
+      "type": "rework",
+      "mandatory": false,
+      "question": "For bpic2012, return the exact aggregate_rework_event_count and cases_with_rework facts.",
+      "gold_calls": [
+        {"tool": "describe_log", "arguments": {"log_id": "bpic2012"}}
+      ],
+      "expected_fact_names": ["aggregate_rework_event_count", "cases_with_rework"]
+    },
+    {
+      "id": "configured-sla",
+      "type": "configured_sla",
+      "mandatory": true,
+      "question": "Using the configured test threshold 604800000 ms for bpic2012, how many cases strictly exceed it and what share is that? Return sla_violation_case_count and sla_violation_case_share.",
+      "gold_calls": [
+        {"tool": "describe_log", "arguments": {"log_id": "bpic2012", "sla_threshold_ms": 604800000}}
+      ],
+      "expected_fact_names": ["sla_violation_case_count", "sla_violation_case_share"]
+    },
+    {
+      "id": "exact-case-trace",
+      "type": "exact_case_trace",
+      "mandatory": true,
+      "question": "Return the exact COMPLETE-perspective trace for bpic2012 case {{FIRST_CASE_ID}} as case_trace.",
+      "gold_calls": [
+        {"tool": "get_case_trace", "arguments": {"log_id": "bpic2012", "case_id": "{{FIRST_CASE_ID}}", "perspective": "complete"}}
+      ],
+      "expected_fact_names": ["case_trace"]
+    },
+    {
+      "id": "summary-plus-top-activity",
+      "type": "simple_composition",
+      "mandatory": false,
+      "question": "For bpic2012, return both case_count and the top COMPLETE-perspective activity by event count as activity_1.",
+      "gold_calls": [
+        {"tool": "describe_log", "arguments": {"log_id": "bpic2012"}},
+        {"tool": "list_activities", "arguments": {"log_id": "bpic2012", "order_by": "event_count_desc", "limit": 1}}
+      ],
+      "expected_fact_names": ["case_count", "activity_1"]
+    },
+    {
+      "id": "filtered-transitions",
+      "type": "filtering",
+      "mandatory": false,
+      "question": "For bpic2012, list the top two transitions whose from_activity is exactly {{TOP_TRANSITION_FROM}}. Return transition_1 and transition_2.",
+      "gold_calls": [
+        {"tool": "list_transitions", "arguments": {"log_id": "bpic2012", "from_activity": "{{TOP_TRANSITION_FROM}}", "order_by": "transition_count_desc", "limit": 2}}
+      ],
+      "expected_fact_names": ["transition_1", "transition_2"]
+    },
+    {
+      "id": "unsupported-prediction",
+      "type": "unsupported_abstention",
+      "mandatory": true,
+      "question": "Predict the next activity for a new bpic2012 case and give its probability.",
+      "gold_calls": [],
+      "expected_fact_names": [],
+      "expected_status": "UNAVAILABLE"
+    }
+  ]
+}

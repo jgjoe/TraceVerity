@@ -1,0 +1,40 @@
+{
+  "configured_sla_threshold_ms": 604800000,
+  "datasets": [
+    {
+      "filename": "summary.csv",
+      "row_count": 1,
+      "sha256": "be6c99cd854d177917cc84724f81513cc79eef5029f4ed56889ca25250260eb3"
+    },
+    {
+      "filename": "variants.csv",
+      "row_count": 4336,
+      "sha256": "06febd048384b66f15ddcf80e69610236eb2403ff4ca752e183ddf08a71afbfd"
+    },
+    {
+      "filename": "transitions.csv",
+      "row_count": 138,
+      "sha256": "b1d24ed35b40675d286ef572026e713214f620ca4eb98c1c9cadcd9063425577"
+    },
+    {
+      "filename": "activities.csv",
+      "row_count": 23,
+      "sha256": "751caf768ccfdee648e282e221a00cff8adb1a53cca269108c71c05e9f6835a0"
+    },
+    {
+      "filename": "cases.csv",
+      "row_count": 13087,
+      "sha256": "2147efacd6ee2b52c173c58f6b9d824ee131037603ed789aa1c9608305a0112d"
+    }
+  ],
+  "expected_canonical_source_facts": {
+    "analysis_event_count": 164506,
+    "case_count": 13087,
+    "direct_follow_count": 151419,
+    "raw_event_count": 262200,
+    "variant_count": 4336
+  },
+  "export_schema_version": "slice3-powerbi-export-v1",
+  "log_fingerprint": "5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3",
+  "metric_definition_version": "slice0-metrics-v1"
+}

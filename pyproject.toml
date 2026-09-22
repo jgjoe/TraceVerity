@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "process-intelligence-workbench"
+version = "0.1.0"
+description = "Local-first deterministic process intelligence workbench"
+requires-python = ">=3.11"
+dependencies = [
+  "duckdb==1.5.5",
+  "fastapi>=0.115,<1",
+  "mcp==2.2.0",
+  "uvicorn>=0.34,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx>=0.28,<1",
+  "pytest==9.1.1",
+]
+
+[project.scripts]
+piw-slice0 = "piw.cli:main"
+piw-agent-eval = "piw.evaluation:main"
+piw-mcp-eval = "piw.mcp_evaluation:main"
+piw-web = "piw.web:main"
+piw-analytics-export = "piw.analytics:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -p no:cacheprovider"
+testpaths = ["tests"]
+markers = [
+  "integration: runs the full canonical BPIC12 pipeline",
+]

@@ -1,0 +1,116 @@
+{
+  "schema_version": "traceverity-public-verification-v1",
+  "product": {
+    "name": "TraceVerity — Process Intelligence Workbench",
+    "version": "0.1.0",
+    "canonical_source_revision": "88a627d585c75ec5cdffaad5ec94f2f58fb8aaea"
+  },
+  "source": {
+    "dataset": "BPI Challenge 2012",
+    "doi": "10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f",
+    "filename": "BPI_Challenge_2012.xes.gz",
+    "sha256": "5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3",
+    "size_bytes": 3342406,
+    "licence": "4TU General Terms of Use",
+    "dataset_bundled": false
+  },
+  "contracts": {
+    "metric_definition_version": "slice0-metrics-v1",
+    "tool_schema_version": "slice1-tool-v1",
+    "http_contract_version": "slice2-http-v1",
+    "analytics_export_version": "slice3-powerbi-export-v1",
+    "mcp_sdk_version": "2.2.0",
+    "mcp_protocol_version": "2026-07-28"
+  },
+  "core": {
+    "status": "PASS",
+    "invariant_count": 17,
+    "aggregate_facts": {
+      "case_count": 13087,
+      "raw_event_count": 262200,
+      "analysis_event_count": 164506,
+      "variant_count": 4336,
+      "direct_follow_count": 151419,
+      "cases_with_rework": 7019,
+      "aggregate_rework_event_count": 57556,
+      "configured_sla_threshold_ms": 604800000,
+      "configured_sla_violation_case_count": 5378,
+      "configured_sla_violation_case_share": 0.410942156338
+    },
+    "caveats": {
+      "observed_gap_is_true_queue_waiting": false,
+      "configured_threshold_is_claimed_business_sla": false
+    }
+  },
+  "current_regression": {
+    "pytest": {
+      "status": "PASS",
+      "passed": 48
+    },
+    "web_production_build": {
+      "status": "PASS"
+    },
+    "web_playwright": {
+      "status": "PASS",
+      "passed": 1,
+      "total": 1
+    }
+  },
+  "agent_direct_route": {
+    "status": "PASS",
+    "passed": 10,
+    "total": 10,
+    "grounding_violation_count": 0,
+    "forbidden_action_count": 0,
+    "forbidden_attempt_count": 0
+  },
+  "mcp_route": {
+    "status": "PASS",
+    "transport": "stdio",
+    "tool_count": 5,
+    "schema_equivalence_passed": true,
+    "subprocess_cleanup_passed": true,
+    "passed": 10,
+    "total": 10,
+    "grounding_violation_count": 0,
+    "forbidden_action_count": 0,
+    "forbidden_attempt_count": 0
+  },
+  "power_bi_local_validation": {
+    "status": "PASS",
+    "refresh_verified": true,
+    "open_save_reopen_verified": true,
+    "model_row_counts": {
+      "Summary": 1,
+      "Activities": 23,
+      "Cases": 13087,
+      "Transitions": 138,
+      "Variants": 4336
+    },
+    "pbix_bundled": false
+  },
+  "usability": {
+    "status": "PASS",
+    "protocol_version": "cohort-01-ko-ui-v1",
+    "tested_revision": "29352c5f47af94fefc04f920e35002bc16b71168",
+    "tested_surface": "korean-localized-test-only",
+    "valid_participants": 3,
+    "tasks_per_participant": 3,
+    "total_task_passes": 9,
+    "facilitator_hint_count": 0,
+    "material_misunderstanding_count": 0,
+    "english_ui_copy_tested": false,
+    "later_english_visual_polish_tested": false
+  },
+  "distribution_boundary": {
+    "full_local_evidence_excluded": true,
+    "raw_usability_records_excluded": true,
+    "source_dataset_excluded": true,
+    "duckdb_excluded": true,
+    "generated_analytics_csv_excluded": true,
+    "pbix_excluded": true,
+    "public_candidate_reproduces_core_web_mcp_contract_tests_and_analytics": true,
+    "full_slice5_evaluator_requires_excluded_protected_local_artifacts": true,
+    "full_local_evidence_reproduction_scope": "canonical-local-workspace"
+  }
+}
