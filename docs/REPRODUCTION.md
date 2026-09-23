@@ -13,12 +13,12 @@ Set-Location ..
 
 ## A. BPIC12 baseline reproduction
 
-Dataset: BPI Challenge 2012  
-Author: Boudewijn van Dongen  
-DOI: `10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f`  
-Licence label: `4TU General Terms of Use`  
-Expected file: `data/raw/BPI_Challenge_2012.xes.gz`  
-Expected SHA-256: `5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3`
+- Dataset: BPI Challenge 2012
+- Author: Boudewijn van Dongen
+- DOI: `10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f`
+- Licence label: `4TU General Terms of Use`
+- Expected file: `data/raw/BPI_Challenge_2012.xes.gz`
+- Expected SHA-256: `5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3`
 
 ```powershell
 uv run piw-slice0
@@ -60,13 +60,13 @@ Set-Location ..
 
 Obtain the source separately from its public data provider.
 
-Dataset: `Dataset belonging to the help desk log of an Italian Company`  
-Author: Mirko Polato  
-DOI: `10.4121/uuid:0c60edf1-6f83-4e75-9367-4c63b3e9d5bb`  
-Licence label: `4TU General Terms of Use`  
-Expected filename: `finale.csv`  
-Expected local path: `data/raw/helpdesk/finale.csv`  
-Expected SHA-256: `31024fa6da0a35578643d50f2bea6e90d5ce97628b64851e271b521f005eef1c`
+- Dataset: `Dataset belonging to the help desk log of an Italian Company`
+- Author: Mirko Polato
+- DOI: `10.4121/uuid:0c60edf1-6f83-4e75-9367-4c63b3e9d5bb`
+- Licence label: `4TU General Terms of Use`
+- Expected filename: `finale.csv`
+- Expected local path: `data/raw/helpdesk/finale.csv`
+- Expected SHA-256: `31024fa6da0a35578643d50f2bea6e90d5ce97628b64851e271b521f005eef1c`
 
 Canonical CSV mapping:
 
