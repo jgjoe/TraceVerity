@@ -1,114 +1,102 @@
 # TraceVerity — Process Intelligence Workbench
 
-TraceVerity is a local-first Process Intelligence product that reconstructs
-observed workflow behavior from event logs while keeping authoritative process
-facts inside one deterministic Python/DuckDB Core.
+TraceVerity is a local-first Process Intelligence workbench that imports, maps, validates, and analyzes CSV, XES, and XES.GZ event logs through one deterministic Python/DuckDB Core proven across two real business processes.
 
-**AI never invents process truth or numeric metrics.** The Agent and MCP path
-are bounded consumers of the same five read-only Core tools used by the product
-contracts; Web and Power BI consume deterministic facts rather than redefining
-the metrics.
+**AI never defines authoritative process metrics.** The browser, Direct Agent, and stdio MCP resolve datasets through the same Core-backed read path. The historical Power BI proof consumes a deterministic BPIC12 export rather than independently defining process metrics.
 
-![TraceVerity overview](docs/images/traceverity-overview.png)
+![TraceVerity overview with the BPIC12 Dataset Workspace selected](docs/images/traceverity-overview.png)
 
-## What it demonstrates
+## One process-truth boundary
 
-- Deterministic XES ingest, canonical event ordering, DuckDB persistence, and
-  process metrics under a versioned contract.
-- Analyst-facing React/TypeScript workbench over a localhost FastAPI surface.
-- Deterministic analytics export consumed by Power Query and thin DAX measures
-  for a locally verified Power BI Desktop report.
-- One bounded local Agent with provenance-backed facts and explicit abstention.
-- A stdio MCP route exposing the **same** five read-only Core tools rather than
-  a second truth layer.
-- Machine regression, browser E2E, route-equivalence checks, and a supervised
-  usability gate with deliberately scoped public evidence.
-
-## Trust architecture
+Event-log results drift when each UI, BI layer, or model calculates them independently. TraceVerity keeps ordering, lifecycle perspective, variants, direct-follow counts, durations, rework, and configured-threshold semantics in one versioned Core. Invalid sources and inconsistent local state fail closed.
 
 ```text
-BPI Challenge 2012 XES
+local CSV / XES / XES.GZ
         |
         v
-deterministic Python / DuckDB Core
+explicit preview, mapping, timestamp interpretation, validation
         |
-        +--> five typed read-only tools --> direct local Agent
-        |                             \--> stdio MCP --> same tools
-        |
-        +--> FastAPI --> React workbench
-        |
-        +--> deterministic CSV export --> Power Query / DAX --> Power BI Desktop
+        v
+DatasetRegistry -> DatasetResolver -> CoreReadSurface
+        |                         deterministic Python / DuckDB Core
+        +--> localhost FastAPI --> React workbench
+        +--> 5 read-only tools --> Direct Agent
+        |                       \-> stdio MCP
+        \--> BPIC12 export ------> historical Power BI proof
 ```
 
-The Core pins the source fingerprint and validates 17 invariants. Invalid source
-or metric state produces `HOLD`. Agent answers must be grounded in exact returned
-facts; unsupported requests end as `UNAVAILABLE`. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/CONTRACTS.md](docs/CONTRACTS.md).
+Current contracts:
 
-## Demonstrated BPIC12 facts
+- metrics: `slice0-metrics-v1`
+- generic import: `dataset-import-v1`
+- HTTP: `slice-c-http-v2`
+- tool schema: `slice-d-tool-v2`
+- analytics export: `slice3-powerbi-export-v1`
 
-The canonical source is **BPI Challenge 2012**, a loan-application event log.
-The source archive is not included in this repository.
+## Browser onboarding
 
-| Aggregate fact | Verified value |
-|---|---:|
-| Cases | 13,087 |
-| Raw events | 262,200 |
-| COMPLETE-perspective analysis events | 164,506 |
-| Variants | 4,336 |
-| Direct-follow occurrences | 151,419 |
-| Cases with rework | 7,019 |
-| Aggregate rework events | 57,556 |
-| Configured-scenario SLA violations | 5,378 cases (41.09%) |
+The Dataset Workspace supports local `.csv`, `.xes`, and `.xes.gz` files. A user previews source identity, maps CSV fields explicitly, states timestamp format/timezone interpretation, validates the source, and only then registers a ready dataset. The workbench can switch between registered datasets without changing the Core semantics.
 
-Two semantic boundaries are important:
+![The real Help Desk CSV imported and selected with 4,580 cases and no configured SLA card](docs/images/traceverity-helpdesk-onboarding.png)
 
-- **Observed event gap is not true queue waiting.** It is the timestamp delta
-  between adjacent COMPLETE-perspective events.
-- **604,800,000 ms (7 days) is a configured test threshold, not a claimed
-  BPIC12 business SLA.**
+For CSV, case ID, activity, and timestamp mappings are required. Resource and lifecycle are explicit optional mappings. A supplied timezone is a deterministic normalization convention, not automatically a claim about the source's real-world timezone.
 
-![Top direct-follow transitions](docs/images/traceverity-process-patterns.png)
+## Two real-world dataset proof
+
+The same unchanged metric engine was independently re-derived against two real event logs.
+
+| Verified aggregate | BPI Challenge 2012 | Italian Help Desk |
+|---|---:|---:|
+| Cases | 13,087 | 4,580 |
+| Raw events | 262,200 | 21,348 |
+| Analysis events | 164,506 | 21,348 |
+| Activities | 24 | 14 |
+| Variants | 4,336 | 226 |
+| Direct-follow occurrences | 151,419 | 16,768 |
+| Cases with rework | 7,019 | 1,240 |
+| Aggregate rework events | 57,556 | 1,905 |
+
+Neither raw dataset is bundled. Source identity, fingerprints, attribution, and aggregate facts are in [`evidence/public-verification-summary.json`](evidence/public-verification-summary.json).
+
+![Current aggregate variants, transitions, and activities](docs/images/traceverity-process-patterns.png)
+
+## Shared Web, Agent, and MCP facts
+
+The public tool surface has exactly five read-only operations:
+
+- `describe_log`
+- `list_variants`
+- `list_transitions`
+- `list_activities`
+- `get_case_trace`
+
+Direct Agent and stdio MCP use the same schemas, `DatasetResolver`, and `CoreReadSurface`; MCP is a transport, not a second metric engine. Agent answers are accepted only when values trace to returned facts. Unsupported requests remain unavailable rather than being estimated.
 
 ## Verification
 
-The curated public record is
-[`evidence/public-verification-summary.json`](evidence/public-verification-summary.json).
-Current verified highlights:
+Independent Recovery Slice E verification on canonical baseline `f4da118f7f8f8df9beedf0c8b00e1f9bc14fb535` recorded:
 
-| Check | Result |
+| Gate | Result |
 |---|---:|
-| Python regression | 48 passed |
+| Python regression | 190 / 190 PASS |
 | Web production build | PASS |
-| Playwright | 1/1 PASS |
-| Direct Agent evaluation | 10/10 PASS |
-| MCP-route evaluation | 10/10 PASS |
-| Grounding violations | 0 |
-| Forbidden actions / attempts | 0 / 0 |
-| Power BI local refresh + reopen validation | PASS |
-| Supervised usability | 3 valid humans × 3/3 tasks PASS |
+| Playwright | 2 / 2 PASS |
+| Direct Agent | 12 / 12 PASS |
+| MCP Agent | 12 / 12 PASS |
+| Direct/MCP comparisons | 22 / 22, mismatch 0 |
+| Grounding / forbidden-action violations | 0 / 0 |
+| Machine-path scan | 179 responses, 0 leaks |
 
-The usability result belongs to the Korean-localized test-only surface at the
-exact tested revision documented in [docs/USABILITY.md](docs/USABILITY.md).
-English copy and the later visual polish in these screenshots were not the
-tested surface.
+The canonical Slice E report SHA-256 is `a94219d0f6fbdb55082065162e72881ed1efd4e8b96d25a528564e04e9fa0e5a`. The aggregate-only public record uses schema `traceverity-public-verification-v2`.
 
-![Metric caveats](docs/images/traceverity-trust-caveats.png)
+The sanitized public tree passes **168 / 168 Python tests**. It intentionally excludes canonical-only Help Desk evidence integration, model-backed Agent/MCP re-derivation, protected-artifact/PBIX regression, and historical evidence checks. The independent Slice E 190/190 result remains published aggregate evidence; it is not represented as the public-tree test count. Details: [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
 
 ## Local reproduction
-
-TraceVerity does not auto-download or redistribute BPIC12. Obtain the dataset
-from the official source and verify the pinned SHA-256 before running the Core.
-The checked reproduction sequence is documented in
-[docs/REPRODUCTION.md](docs/REPRODUCTION.md).
-
-Quick baseline:
 
 ```powershell
 uv sync --extra test
 uv run piw-slice0
-uv run pytest
+uv run pytest -q
 
 Set-Location web
 npm ci
@@ -116,41 +104,21 @@ npm run build
 npm run test:e2e
 ```
 
-The public tree reproduces the deterministic Core, Python/MCP contract tests,
-Web build/E2E, and analytics export. The historical full Slice 5 model-based
-evaluator additionally protects exact local Slice 0–4 evidence and the PBIX by
-hash; because those private/local artifacts are intentionally excluded, that
-full evaluator belongs to the canonical verification workspace rather than the
-sanitized public tree. Its aggregate 10/10 direct and 10/10 MCP results are
-published in the curated verification summary.
+The sources must be obtained separately. Full BPIC12 baseline, generic browser onboarding, optional real Help Desk reproduction, Agent/MCP checks, and the historical Power BI path are separated in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
 
-## Repository layout
+## Boundaries
 
-```text
-src/piw/                 deterministic Core, tool surface, Agent, Web API, MCP
-tests/                   Core/API/export/MCP regression coverage
-web/                     React/TypeScript workbench + focused Playwright proof
-evaluation/              fixed Agent/MCP evaluation cases
-analytics/powerbi/       deterministic export manifest, Power Query, DAX
-evidence/                aggregate-only public verification summary
-docs/                    architecture, contracts, reproduction, usability summary
-```
+- Local-first single-user workbench; no cloud/SaaS, authentication, multi-user, or enterprise-scale claim.
+- Generic browser/Core/Agent/MCP support covers registered datasets. Power BI remains a historical BPIC12-specific proof, not generic Power BI.
+- No predictive process mining or BPMN/Petri-net discovery claim.
+- Observed event gap is **not** true queue or waiting time.
+- Configured thresholds are analytical scenarios, **not** actual business SLAs. Help Desk has no default configured threshold.
+- Historical analysis-UI usability passed with three valid humans at revision `29352c5f47af94fefc04f920e35002bc16b71168`. Current browser onboarding has **not** completed a human usability cohort.
+
+![Current trust caveats for observed event gap and configured thresholds](docs/images/traceverity-trust-caveats.png)
 
 ## Data rights and licence
 
-Project-authored source and documentation in this distribution are licensed
-under the [MIT License](LICENSE).
+Project-authored source and documentation in this distribution are licensed under the [MIT License](LICENSE).
 
-**BPI Challenge 2012 is separate.** It was created by Boudewijn van Dongen and
-is available through 4TU.ResearchData / Eindhoven University of Technology at
-DOI `10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f`. The official dataset
-metadata identifies the licence as **4TU General Terms of Use**. The source
-archive is not bundled and is not relicensed by this project. See [NOTICE](NOTICE).
-
-## v1 scope
-
-TraceVerity v1 is intentionally local-first. It does **not** claim generic
-event-log import, process maps, predictive process mining, authentication,
-multi-agent/A2A behavior, auto-remediation, cloud infrastructure, or SaaS
-operation. The Agent and MCP work are integration/trust proofs around the
-deterministic Process Intelligence product, not the product identity itself.
+BPI Challenge 2012 and the Italian Help Desk dataset remain under their own source terms. They are not bundled and are not relicensed by this repository. See [NOTICE](NOTICE) and [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).

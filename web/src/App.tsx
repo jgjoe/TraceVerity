@@ -1,4 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+
+import ImportPanel, { DatasetItem } from "./ImportPanel";
 
 type Fact<T = unknown> = {
   fact_id: string;
@@ -26,9 +28,9 @@ type Summary = {
   direct_follow_count: number;
   observed_gap_p90_ms: number;
   raw_event_count: number;
-  sla_threshold_ms: number;
-  sla_violation_case_count: number;
-  sla_violation_case_share: number;
+  sla_threshold_ms?: number;
+  sla_violation_case_count?: number;
+  sla_violation_case_share?: number;
   variant_count: number;
 };
 
@@ -70,6 +72,18 @@ type Trace = {
   case_id: string;
   perspective: "complete" | "raw";
 };
+
+type DatasetListing = {
+  api_schema_version: string;
+  canonical_log_id: string;
+  items: DatasetItem[];
+};
+
+/**
+ * Configured test scenarios per dataset. Only a dataset that actually carries
+ * one is analyzed with an SLA threshold; an imported dataset receives none.
+ */
+const CONFIGURED_SLA_SCENARIOS: Record<string, number> = { bpic2012: 604_800_000 };
 
 class ApiError extends Error {
   code: string;
@@ -133,28 +147,70 @@ function MetricCard({
 }
 
 export default function App() {
+  const [datasets, setDatasets] = useState<DatasetItem[]>([]);
+  const [selectedLogId, setSelectedLogId] = useState("");
+  const selectedLogRef = useRef(selectedLogId);
+  selectedLogRef.current = selectedLogId;
+  const [listingError, setListingError] = useState("");
+  const [panelOpen, setPanelOpen] = useState(false);
   const [summary, setSummary] = useState<SummaryEnvelope | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loadingError, setLoadingError] = useState("");
-  const [caseId, setCaseId] = useState("173688");
+  const [caseId, setCaseId] = useState("");
   const [trace, setTrace] = useState<Trace | null>(null);
   const [traceError, setTraceError] = useState("");
   const [traceLoading, setTraceLoading] = useState(false);
 
+  const refreshDatasets = useCallback(async (preferred?: string) => {
+    try {
+      const listing = await getJson<DatasetListing>("/api/logs");
+      setDatasets(listing.items);
+      setListingError("");
+      setSelectedLogId((current) => {
+        const wanted = preferred ?? current;
+        if (wanted && listing.items.some((item) => item.log_id === wanted && item.status === "ready")) {
+          return wanted;
+        }
+        const fallback =
+          listing.items.find((item) => item.built_in && item.status === "ready") ??
+          listing.items.find((item) => item.status === "ready");
+        return fallback?.log_id ?? "";
+      });
+    } catch (error) {
+      setListingError(error instanceof Error ? error.message : "Unable to list local datasets");
+    }
+  }, []);
+
   useEffect(() => {
+    void refreshDatasets();
+  }, [refreshDatasets]);
+
+  useEffect(() => {
+    if (!selectedLogId) return;
     let active = true;
+    setLoadingError("");
+    setSummary(null);
+    setVariants([]);
+    setTransitions([]);
+    setActivities([]);
+    setTrace(null);
+    setTraceError("");
+    setTraceLoading(false);
+    setCaseId("");
+    const threshold = CONFIGURED_SLA_SCENARIOS[selectedLogId];
+    const summaryQuery = threshold === undefined ? "" : `?sla_threshold_ms=${threshold}`;
     Promise.all([
-      getJson<SummaryEnvelope>("/api/logs/bpic2012/summary?sla_threshold_ms=604800000"),
+      getJson<SummaryEnvelope>(`/api/logs/${selectedLogId}/summary${summaryQuery}`),
       getJson<Envelope<{ items: Variant[] }>>(
-        "/api/logs/bpic2012/variants?order_by=case_count_desc&limit=10",
+        `/api/logs/${selectedLogId}/variants?order_by=case_count_desc&limit=10`,
       ),
       getJson<Envelope<{ items: Transition[] }>>(
-        "/api/logs/bpic2012/transitions?order_by=transition_count_desc&limit=10",
+        `/api/logs/${selectedLogId}/transitions?order_by=transition_count_desc&limit=10`,
       ),
       getJson<Envelope<{ items: Activity[] }>>(
-        "/api/logs/bpic2012/activities?order_by=rework_event_count_desc&limit=10",
+        `/api/logs/${selectedLogId}/activities?order_by=rework_event_count_desc&limit=10`,
       ),
     ])
       .then(([summaryResult, variantResult, transitionResult, activityResult]) => {
@@ -170,28 +226,34 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedLogId]);
+
+  const selected = datasets.find((item) => item.log_id === selectedLogId) ?? null;
+  const selectedName = selected?.display_name ?? selectedLogId;
 
   async function lookupTrace(event: FormEvent) {
     event.preventDefault();
     const requestedCase = caseId.trim();
-    if (!requestedCase) return;
+    if (!requestedCase || !selectedLogId) return;
+    const requestedLogId = selectedLogId;
     setTraceLoading(true);
     setTraceError("");
     setTrace(null);
     try {
       const response = await getJson<Envelope<Trace>>(
-        `/api/logs/bpic2012/cases/${encodeURIComponent(requestedCase)}?perspective=complete`,
+        `/api/logs/${requestedLogId}/cases/${encodeURIComponent(requestedCase)}?perspective=complete`,
       );
+      if (selectedLogRef.current !== requestedLogId) return;
       setTrace(response.result);
     } catch (error) {
+      if (selectedLogRef.current !== requestedLogId) return;
       if (error instanceof ApiError && error.code === "NOT_FOUND") {
-        setTraceError(`No BPIC12 case found for “${requestedCase}”.`);
+        setTraceError(`No ${selectedName} case found for “${requestedCase}”.`);
       } else {
         setTraceError(error instanceof Error ? error.message : "Case lookup failed");
       }
     } finally {
-      setTraceLoading(false);
+      if (selectedLogRef.current === requestedLogId) setTraceLoading(false);
     }
   }
 
@@ -206,7 +268,9 @@ export default function App() {
           <div className="eyebrow">Process Intelligence Workbench</div>
           <h1>TraceVerity</h1>
           <p>
-            <span className="status-dot" aria-hidden="true" /> Dataset: <strong>BPI Challenge 2012</strong>
+            <span className="status-dot" aria-hidden="true" /> Dataset:{" "}
+            <strong data-testid="selected-dataset-name">{selectedName || "none available"}</strong>
+            {selected && <span data-testid="selected-dataset-status"> · {selected.status}</span>}
           </p>
         </div>
         <div className="principle">
@@ -215,10 +279,55 @@ export default function App() {
         </div>
       </header>
 
-      {loadingError && <div className="error-banner">Unable to load the workbench: {loadingError}</div>}
-      {!summary && !loadingError && <div className="loading">Reading the canonical local dataset…</div>}
+      <section aria-labelledby="workspace-heading">
+        <div className="section-heading">
+          <div>
+            <h2 id="workspace-heading">Dataset workspace</h2>
+          </div>
+          <span className="data-tag">{datasets.length} local datasets</span>
+        </div>
+        <div className="workspace-bar">
+          <div className="field">
+            <label htmlFor="dataset-select">Dataset</label>
+            <select
+              data-testid="dataset-select"
+              id="dataset-select"
+              onChange={(event) => setSelectedLogId(event.target.value)}
+              value={selectedLogId}
+            >
+              {datasets.map((item) => (
+                <option
+                  disabled={item.status !== "ready"}
+                  key={item.log_id}
+                  value={item.log_id}
+                >
+                  {item.display_name} ({item.log_id}) · {item.status}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="standalone"
+            data-testid="import-toggle"
+            onClick={() => setPanelOpen((open) => !open)}
+            type="button"
+          >
+            {panelOpen ? "Close import" : "Import event log"}
+          </button>
+        </div>
+        {listingError && <div className="error-inline" role="alert">{listingError}</div>}
+        {panelOpen && <ImportPanel onImported={(logId) => void refreshDatasets(logId)} />}
+      </section>
 
-      {summary && (
+      {loadingError && <div className="error-banner">Unable to load the workbench: {loadingError}</div>}
+      {!selectedLogId && !loadingError && (
+        <div className="loading">No ready local dataset is available yet.</div>
+      )}
+      {selectedLogId && !summary && !loadingError && (
+        <div className="loading">Reading the selected local dataset…</div>
+      )}
+
+      {selectedLogId && summary && (
         <>
           <section aria-labelledby="summary-heading">
             <div className="section-heading">
@@ -230,7 +339,7 @@ export default function App() {
             <div className="metrics-grid">
               <MetricCard label="Cases" value={formatInteger(summary.result.case_count)} testId="case-count" />
               <MetricCard label="Raw events" value={formatInteger(summary.result.raw_event_count)} testId="raw-events" />
-              <MetricCard label="Analysis events" value={formatInteger(summary.result.analysis_event_count)} />
+              <MetricCard label="Analysis events" value={formatInteger(summary.result.analysis_event_count)} testId="analysis-events" />
               <MetricCard label="Variants" value={formatInteger(summary.result.variant_count)} testId="variant-count" />
               <MetricCard label="Direct-follow occurrences" value={formatInteger(summary.result.direct_follow_count)} />
               <MetricCard label="Cycle time · p50" value={formatDuration(summary.result.cycle_time_p50_ms)} detail={`${summary.result.cycle_time_p50_ms} ms`} />
@@ -239,11 +348,14 @@ export default function App() {
               <MetricCard label="Observed gap · p90" value={formatDuration(summary.result.observed_gap_p90_ms)} detail={`${summary.result.observed_gap_p90_ms} ms · not true queue waiting`} />
               <MetricCard label="Cases with rework" value={formatInteger(summary.result.cases_with_rework)} />
               <MetricCard label="Aggregate rework events" value={formatInteger(summary.result.aggregate_rework_event_count)} />
-              <MetricCard
-                label="Configured SLA violations"
-                value={formatInteger(summary.result.sla_violation_case_count)}
-                detail={`raw share ${formatShare(summary.result.sla_violation_case_share)} · configured test threshold: 604800000 ms`}
-              />
+              {summary.result.sla_threshold_ms !== undefined && (
+                <MetricCard
+                  label="Configured SLA violations"
+                  value={formatInteger(summary.result.sla_violation_case_count ?? 0)}
+                  detail={`raw share ${formatShare(summary.result.sla_violation_case_share ?? 0)} · configured test threshold: ${summary.result.sla_threshold_ms} ms`}
+                  testId="sla-card"
+                />
+              )}
             </div>
           </section>
 
@@ -312,18 +424,21 @@ export default function App() {
           <section className="trace-panel" aria-labelledby="trace-heading">
             <div>
               <h2 id="trace-heading">Case trace lookup</h2>
-              <p>Retrieve the canonical ordered activity trace. Default perspective: <strong>COMPLETE</strong>.</p>
+              <p>
+                Retrieve the canonical ordered activity trace for{" "}
+                <strong>{selectedName}</strong>. Default perspective: <strong>COMPLETE</strong>.
+              </p>
               <form onSubmit={lookupTrace}>
-                <label htmlFor="case-id">BPIC12 case ID</label>
+                <label htmlFor="case-id">Case ID</label>
                 <div className="input-row">
-                  <input id="case-id" value={caseId} onChange={(event) => setCaseId(event.target.value)} placeholder="e.g. 173688" />
+                  <input id="case-id" value={caseId} onChange={(event) => setCaseId(event.target.value)} placeholder="Enter a case ID" />
                   <button type="submit" disabled={traceLoading}>{traceLoading ? "Looking up…" : "Look up case"}</button>
                 </div>
               </form>
             </div>
             <div className="trace-result" aria-live="polite">
               {!trace && !traceError && <div className="empty-trace">Enter a case ID to inspect its COMPLETE-perspective path.</div>}
-              {traceError && <div className="trace-error" role="alert">{traceError}</div>}
+              {traceError && <div className="trace-error" data-testid="trace-error" role="alert">{traceError}</div>}
               {trace && (
                 <div data-testid="case-trace">
                   <div className="trace-meta"><span>CASE {trace.case_id}</span><span>{trace.activities.length} events</span></div>

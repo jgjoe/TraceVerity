@@ -11,7 +11,6 @@ from typing import Any
 import duckdb
 
 from .core import (
-    BPIC12_EXPECTED_SHA256,
     METRIC_DEFINITION_VERSION,
     activity_summary,
     case_analytics,
@@ -24,6 +23,7 @@ from .core import (
     transition_summary,
     variant_summary,
 )
+from .profiles import BPIC2012
 
 EXPORT_SCHEMA_VERSION = "slice3-powerbi-export-v1"
 CONFIGURED_SLA_THRESHOLD_MS = 604_800_000
@@ -170,7 +170,7 @@ def export_analytics(
         "variant_count": variants["variant_count"],
     }
     if validate_expected_facts:
-        if fingerprint != BPIC12_EXPECTED_SHA256:
+        if fingerprint != BPIC2012.sha256:
             raise ValueError("database log fingerprint does not match canonical BPIC12")
         mismatches = {
             name: {"actual": source_facts[name], "expected": expected}

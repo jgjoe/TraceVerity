@@ -1,24 +1,15 @@
 from __future__ import annotations
 
 import gzip
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO, Iterator
 from xml.etree import ElementTree
 
-
-@dataclass(frozen=True, slots=True)
-class Event:
-    case_id: str
-    activity: str
-    event_ts_utc_ms: int
-    event_pos: int
-    lifecycle: str | None
-    resource: str | None
+from .events import Event, SourceContractError, utc_epoch_ms
 
 
-class XesContractError(ValueError):
+class XesContractError(SourceContractError):
     """Raised when a required XES value violates the canonical contract."""
 
 
@@ -57,12 +48,29 @@ def _utc_epoch_ms(value: str, location: str) -> int:
         raise XesContractError(f"{location}: invalid time:timestamp {value!r}") from exc
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise XesContractError(f"{location}: timestamp must include a UTC offset")
-    delta = parsed.astimezone(UTC) - datetime(1970, 1, 1, tzinfo=UTC)
-    return (delta.days * 86_400 + delta.seconds) * 1_000 + delta.microseconds // 1_000
+    return utc_epoch_ms(parsed)
 
 
 def _open_xes(path: Path) -> BinaryIO:
     return gzip.open(path, "rb") if path.suffix.lower() == ".gz" else path.open("rb")
+
+
+def _iter_traces(path: Path) -> Iterator[ElementTree.Element]:
+    """Stream one trace element at a time, failing closed on any source defect."""
+
+    try:
+        with _open_xes(path) as source:
+            for _, element in ElementTree.iterparse(source, events=("end",)):
+                if _local_name(element.tag) != "trace":
+                    continue
+                yield element
+                element.clear()
+    except gzip.BadGzipFile as exc:
+        raise XesContractError(
+            f"{Path(path).name}: XES.GZ source is not a valid gzip stream"
+        ) from exc
+    except ElementTree.ParseError as exc:
+        raise XesContractError(f"{Path(path).name}: malformed XES XML: {exc}") from exc
 
 
 def iter_xes_events(path: Path) -> Iterator[Event]:
@@ -70,45 +78,35 @@ def iter_xes_events(path: Path) -> Iterator[Event]:
 
     seen_case_ids: set[str] = set()
     trace_number = 0
-    with _open_xes(path) as source:
-        for _, element in ElementTree.iterparse(source, events=("end",)):
-            if _local_name(element.tag) != "trace":
-                continue
-            trace_number += 1
-            trace_location = f"trace {trace_number}"
-            case_id = _required_value(element, "concept:name", trace_location)
-            if case_id in seen_case_ids:
-                raise XesContractError(f"{trace_location}: duplicate case_id {case_id!r}")
-            seen_case_ids.add(case_id)
+    for element in _iter_traces(path):
+        trace_number += 1
+        trace_location = f"trace {trace_number}"
+        case_id = _required_value(element, "concept:name", trace_location)
+        if case_id in seen_case_ids:
+            raise XesContractError(f"{trace_location}: duplicate case_id {case_id!r}")
+        seen_case_ids.add(case_id)
 
-            event_pos = 0
-            for child in element:
-                if _local_name(child.tag) != "event":
-                    continue
-                location = f"case {case_id!r} event_pos {event_pos}"
-                activity = _required_value(child, "concept:name", location)
-                timestamp = _required_value(child, "time:timestamp", location)
-                lifecycle = _optional_value(child, "lifecycle:transition", location)
-                resource = _optional_value(child, "org:resource", location)
-                yield Event(
-                    case_id=case_id,
-                    activity=activity,
-                    event_ts_utc_ms=_utc_epoch_ms(timestamp, location),
-                    event_pos=event_pos,
-                    lifecycle=lifecycle,
-                    resource=resource,
-                )
-                event_pos += 1
-            element.clear()
+        event_pos = 0
+        for child in element:
+            if _local_name(child.tag) != "event":
+                continue
+            location = f"case {case_id!r} event_pos {event_pos}"
+            activity = _required_value(child, "concept:name", location)
+            timestamp = _required_value(child, "time:timestamp", location)
+            lifecycle = _optional_value(child, "lifecycle:transition", location)
+            resource = _optional_value(child, "org:resource", location)
+            yield Event(
+                case_id=case_id,
+                activity=activity,
+                event_ts_utc_ms=_utc_epoch_ms(timestamp, location),
+                event_pos=event_pos,
+                lifecycle=lifecycle,
+                resource=resource,
+            )
+            event_pos += 1
 
 
 def source_trace_count(path: Path) -> int:
     """Count traces without interpreting events; useful for fail-closed validation."""
 
-    traces = 0
-    with _open_xes(path) as source:
-        for _, element in ElementTree.iterparse(source, events=("end",)):
-            if _local_name(element.tag) == "trace":
-                traces += 1
-                element.clear()
-    return traces
+    return sum(1 for _ in _iter_traces(path))

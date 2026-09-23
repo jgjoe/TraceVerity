@@ -10,7 +10,8 @@ import pytest
 
 from piw.analytics import CSV_COLUMNS, export_analytics
 from piw.core import case_analytics, install_events
-from piw.xes import Event
+from piw.datasets import SourceFingerprint
+from piw.events import Event
 
 DATABASE = Path("data/processed/bpic2012.duckdb")
 
@@ -29,13 +30,7 @@ def _fixture_database(path: Path) -> Path:
                 _event("over", "A", 0, 0),
                 _event("over", "B", 101, 1),
             ],
-            {
-                "doi": "fixture",
-                "filename": "fixture.xes",
-                "sha256": "c" * 64,
-                "size_bytes": 1,
-                "source_url": "https://example.invalid/fixture",
-            },
+            SourceFingerprint(filename="fixture.xes", sha256="c" * 64, size_bytes=1),
         )
     return path
 

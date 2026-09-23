@@ -8,22 +8,30 @@ BPI Challenge 2012 dataset
 --------------------------
 Dataset: BPI Challenge 2012
 Creator: Boudewijn van Dongen
-Publisher: Eindhoven University of Technology
+Publisher: Eindhoven University of Technology / 4TU.ResearchData
 DOI: 10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f
 Official landing page: https://data.4tu.nl/articles/dataset/BPI_Challenge_2012/12689204
 Licence identified by the official dataset metadata: 4TU General Terms of Use
 
-The original BPI Challenge 2012 dataset is not included in this repository and
-is not licensed under TraceVerity's MIT License. Users obtain the source data
-from the official repository and remain responsible for the source terms. This
-project does not relicense the dataset. Aggregate process metrics shown in the
-README and public verification summary are analytical results produced by the
-deterministic Core.
+Italian Help Desk dataset
+-------------------------
+Dataset: Dataset belonging to the help desk log of an Italian Company
+Creator: Mirko Polato
+Publisher: 4TU.ResearchData
+DOI: 10.4121/uuid:0c60edf1-6f83-4e75-9367-4c63b3e9d5bb
+Official landing page: https://data.4tu.nl/articles/dataset/Dataset_belonging_to_the_help_desk_log_of_an_Italian_Company/12675977
+Licence identified by the official dataset metadata: 4TU General Terms of Use
+
+The original datasets are not included in this repository and are not licensed
+under TraceVerity's MIT License. Users obtain source data separately and remain
+responsible for the source terms. This project does not relicense either dataset.
+Aggregate process metrics in the README and public verification summary are
+analytical results produced by the deterministic Core.
 
 Third-party software and model boundary
 ---------------------------------------
 Python and JavaScript dependencies are referenced through pyproject.toml,
 uv.lock, web/package.json, and web/package-lock.json and retain their own
-licences. The llama.cpp runtime, Qwen model files, Power BI Desktop, source
-dataset archive, generated DuckDB database, generated analytics CSV files, and
-local PBIX report are not bundled in this public distribution.
+licences. The llama.cpp runtime, model files, Power BI Desktop, raw source
+datasets, generated DuckDB databases, generated analytics CSV files, and local
+PBIX report are not bundled in this public distribution.

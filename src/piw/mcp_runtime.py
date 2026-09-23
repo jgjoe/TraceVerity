@@ -12,6 +12,7 @@ import mcp.types as types
 from mcp import Client
 from mcp.client.stdio import StdioServerParameters
 
+from .datasets import DEFAULT_REGISTRY_ROOT
 from .tools import CoreToolSurface, canonical_bytes, canonical_json
 
 _T = TypeVar("_T")
@@ -54,11 +55,13 @@ class McpToolRuntime:
     def __init__(
         self,
         database_path: Path,
+        registry_root: Path = DEFAULT_REGISTRY_ROOT,
         *,
         startup_timeout_seconds: float = 30,
         request_timeout_seconds: float = 300,
     ) -> None:
         self._database_path = database_path.resolve()
+        self._registry_root = Path(registry_root).resolve()
         if not self._database_path.is_file():
             raise FileNotFoundError(self._database_path)
         self._startup_timeout_seconds = startup_timeout_seconds
@@ -119,6 +122,8 @@ class McpToolRuntime:
                 "piw.mcp_server",
                 "--database",
                 str(self._database_path),
+                "--registry-root",
+                str(self._registry_root),
             ],
             cwd=str(Path.cwd().resolve()),
         )
@@ -166,10 +171,15 @@ class McpToolRuntime:
         return copy.deepcopy(self._definitions)
 
     def dispatch(self, tool: Any, arguments: Any) -> dict[str, Any]:
-        if not isinstance(tool, str):
-            raise McpProtocolError("MCP tool name must be a string")
-        if arguments is not None and not isinstance(arguments, dict):
-            raise McpProtocolError("MCP tool arguments must be a JSON object")
+        if not isinstance(tool, str) or (
+            arguments is not None and not isinstance(arguments, dict)
+        ):
+            # A model may emit a malformed request before MCP is invoked.
+            # Normalize it through the exact Core tool validator so the Agent
+            # sees the same fail-closed envelope on both transports.
+            return CoreToolSurface(self._database_path, self._registry_root).dispatch(
+                tool, arguments
+            )
         return self._submit(self._call_tool(tool, arguments))
 
     def close(self) -> None:

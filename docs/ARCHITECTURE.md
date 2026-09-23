@@ -1,60 +1,58 @@
 # Architecture
 
-TraceVerity keeps one deterministic source of process truth and treats every
-other surface as a consumer.
+## Trust rule
+
+The deterministic Python/DuckDB Core is the only component allowed to define authoritative process metrics. Web, Agent, MCP, and the historical Power BI export consume Core facts; they do not independently calculate process truth.
+
+## Current local data path
 
 ```text
-BPI Challenge 2012 XES
+local CSV / XES / XES.GZ
         |
         v
-Python / DuckDB deterministic Core
-  - canonical event model
-  - slice0-metrics-v1
-  - source fingerprint + 17 invariants
+import preview -> explicit mapping/interpretation -> validation
         |
-        +--> five typed read-only tools (slice1-tool-v1)
-        |       +--> bounded local Agent
-        |       +--> stdio MCP transport --> same tools
-        |
-        +--> localhost FastAPI --> React workbench
-        |
-        +--> deterministic CSV export
-                --> Power Query / thin DAX display layer
-                --> local Power BI Desktop report
+        v
+DatasetRegistry -> DatasetResolver -> CoreReadSurface
+        |                         |
+        |                         v
+        |               Python / DuckDB Core
+        |                         |
+        +--> localhost HTTP ------+--> React workbench
+        +--> Direct Agent --------+--> five read-only tools
+        +--> stdio MCP -----------+
+        \--> BPIC12 export ----------> historical Power BI proof
 ```
 
-## Central trust rule
+`DatasetRegistry` stores local descriptors for imported sources. `DatasetResolver` resolves the built-in BPIC12 baseline and registered datasets into one readiness vocabulary. `CoreReadSurface` performs all supported reads and supplies the same facts to HTTP, Direct Agent, and MCP.
 
-**AI never defines or calculates authoritative process facts.** Metric semantics
-live in the Python/DuckDB Core. The Agent can call only five typed read-only
-tools and accepted answers must point back to exact returned facts. A request
-that cannot be answered from the tool surface must end as `UNAVAILABLE`.
+## Import and readiness
 
-The Web workbench formats returned values but does not reimplement process
-metrics. Power BI loads deterministic exports and uses a thin display layer.
-The MCP server is transport only: it exposes the same five tools and does not
-create a second truth system.
+Contract `dataset-import-v1` supports CSV, XES, and XES.GZ.
 
-## Determinism and fail-closed behavior
+- Source preview records filename, format, size, and SHA-256.
+- CSV requires explicit case ID, activity, and timestamp mappings; resource and lifecycle are optional explicit mappings.
+- Timestamp format and timezone interpretation are explicit inputs.
+- Validation occurs before a dataset becomes ready.
+- Unknown, unbuilt, corrupt, or inconsistent dataset state fails closed.
+- Source bytes, descriptors, and generated DuckDB files stay in ignored local storage.
 
-- The BPIC12 source archive is pinned by SHA-256 and expected source metadata.
-- The Core validates 17 invariants. A mismatch produces `HOLD` instead of a
-  warning-only result.
-- Canonical process order is deterministic and duplicates are preserved.
-- `query_id` and `fact_id` values are hashes of normalized contract content,
-  not timestamps or random IDs.
-- Invalid tool names, bounds, enums, missing cases, and unsupported parameters
-  fail closed with structured errors.
+## Core contract
 
-## Consumer boundaries
+Contract `slice0-metrics-v1` owns event ordering, lifecycle perspective, variants, direct-follow transitions, cycle time, observed event gaps, rework, and configured-threshold semantics. Duplicate source events are preserved. Observed event gap is not true queue/waiting time. Configured thresholds are analytical scenarios, not actual business SLAs.
 
-| Surface | Responsibility | Does not do |
-|---|---|---|
-| Core | ingest, ordering, metrics, validation, DuckDB persistence | delegate process truth to AI |
-| Agent | choose bounded tools and return grounded facts | SQL, writes, filesystem/network tools, independent metric calculation |
-| MCP | stdio transport for the same Core tools | introduce new metrics or semantics |
-| Web | local API + analyst workbench | recalculate authoritative process facts |
-| Power BI | consume deterministic exports for analysis/display | reconstruct lifecycle/order/metric logic |
+## HTTP and Web
 
-See [CONTRACTS.md](CONTRACTS.md) for the exact event, metric, tool, HTTP,
-analytics, and MCP contracts.
+Contract `slice-c-http-v2` adds dataset listing, source preview/build, and dataset-scoped read routes. The React workbench has a Dataset Workspace for import and switching. It renders returned facts and does not reimplement metrics.
+
+## Agent and MCP
+
+Contract `slice-d-tool-v2` advertises exactly five read-only tools: `describe_log`, `list_variants`, `list_transitions`, `list_activities`, and `get_case_trace`. Direct Agent and stdio MCP share schemas, resolution, and Core reads. SQL, shell, filesystem, network, and write capabilities are not part of this tool surface.
+
+## Power BI boundary
+
+Contract `slice3-powerbi-export-v1` is the historical BPIC12 analytics export. Power Query and thin DAX measures consume deterministic exported facts. Power BI is not generalized to arbitrary registered datasets.
+
+## Distribution boundary
+
+Public distribution excludes raw datasets, generated DuckDB databases, generated analytics CSVs, PBIX, local model files, private usability evidence, and machine-specific state. The application is local-first and makes no cloud/SaaS, multi-user/auth, or enterprise-scale claim.

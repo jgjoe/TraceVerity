@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import subprocess
+from typing import Any
 
 import duckdb
 import pytest
 
-from piw.evaluation import _compare_tool_call_fidelity
+from piw.evaluation import _compare_tool_call_fidelity, _start_server
 from piw.tools import CoreToolSurface, canonical_bytes
 
 DATABASE = Path("data/processed/bpic2012.duckdb")
@@ -44,6 +46,76 @@ def test_actual_bpic2012_read_only_tool_contract() -> None:
     trace = tools.get_case_trace("bpic2012", first_case, "complete")
     assert trace["result"]["case_id"] == first_case
     assert trace["result"]["activities"]
+
+
+@pytest.mark.parametrize("stubborn", [False, True])
+def test_start_server_stops_a_process_that_never_becomes_ready(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stubborn: bool
+) -> None:
+    """A server that never becomes ready is stopped before the error propagates.
+
+    `_start_server` spawns `llama-server` and only then waits for readiness.
+    When that wait fails, the spawned process must not be left running behind
+    the failed startup: it is terminated, killed if it ignores the termination,
+    and its log is closed, and only then does the readiness error reach the
+    caller. A leaked process would keep the port bound and the log handle open.
+    """
+
+    events: list[str] = []
+    opened: list[Any] = []
+
+    class _FakeProcess:
+        def __init__(self) -> None:
+            self.returncode: int | None = None
+            self.waits = 0
+
+        def poll(self) -> int | None:
+            return self.returncode
+
+        def terminate(self) -> None:
+            events.append("terminate")
+            if not stubborn:
+                self.returncode = 0
+
+        def kill(self) -> None:
+            events.append("kill")
+            self.returncode = -9
+
+        def wait(self, timeout: float | None = None) -> int:
+            events.append(f"wait:{timeout}")
+            self.waits += 1
+            if stubborn and self.waits == 1:
+                raise subprocess.TimeoutExpired(cmd="llama-server", timeout=timeout)
+            return self.returncode or 0
+
+    process = _FakeProcess()
+
+    def fake_popen(_command: list[str], **kwargs: Any) -> _FakeProcess:
+        opened.append(kwargs["stdout"])
+        return process
+
+    def never_ready(*_args: Any, **_kwargs: Any) -> None:
+        raise TimeoutError("llama-server did not become ready within the startup timeout")
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    monkeypatch.setattr("piw.evaluation._wait_for_server", never_ready)
+
+    with pytest.raises(TimeoutError):
+        _start_server(
+            Path("llama-server.exe"),
+            Path("model.gguf"),
+            "http://127.0.0.1:8091/v1",
+            1,
+            tmp_path / "llama-server.log",
+        )
+
+    assert events == (
+        ["terminate", "wait:15", "kill", "wait:15"]
+        if stubborn
+        else ["terminate", "wait:15"]
+    )
+    assert process.returncode is not None
+    assert opened and opened[0].closed is True
 
 
 def test_cycle_p90_rejects_invented_sla_parameter_but_configured_sla_passes() -> None:

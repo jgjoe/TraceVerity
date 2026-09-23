@@ -73,6 +73,33 @@ def _ungrounded_parameter_error(
                 },
                 "schema_version": TOOL_SCHEMA_VERSION,
             }
+    if isinstance(arguments, dict) and isinstance(arguments.get("log_id"), str):
+        # The dataset identifier is only ever copied from the question: a
+        # translated, guessed, or defaulted identifier is rejected here instead
+        # of silently resolving — or failing to resolve — another dataset.
+        log_id = arguments["log_id"]
+        stated_exactly = bool(
+            log_id
+            and re.search(
+                (
+                    rf"(?<![a-z0-9._-]){re.escape(log_id)}"
+                    rf"(?![a-z0-9_-])(?!\.[a-z0-9])"
+                ),
+                question,
+            )
+        )
+        if not stated_exactly:
+            return {
+                "error": {
+                    "code": "UNGROUNDED_PARAMETER",
+                    "details": {"parameter": "log_id"},
+                    "message": (
+                        "log_id must be copied exactly from the question; a dataset "
+                        "identifier is never invented, guessed, translated, or defaulted"
+                    ),
+                },
+                "schema_version": TOOL_SCHEMA_VERSION,
+            }
     if (
         tool_name != "describe_log"
         or not isinstance(arguments, dict)
@@ -190,14 +217,15 @@ class GroundedAgent:
             },
         }
         selection = {
-            "activity_N": "list_activities; choose the requested order and limit N",
+            "activity_N": "list_activities; 'most rework' means order_by rework_event_count_desc; copy the requested limit N",
             "aggregate_rework_event_count or cases_with_rework": "describe_log without SLA",
-            "case_count, event counts, variant_count, direct_follow_count, cycle/gap p50 or p90 facts": "request exactly describe_log with arguments {log_id:bpic2012}; never include sla_threshold_ms, including zero",
+            "case_count, event counts, variant_count, direct_follow_count, cycle/gap p50 or p90 facts": "request exactly describe_log with arguments {log_id:<the resolvable log_id stated in the question>}; never include sla_threshold_ms, including zero",
             "case_trace": "get_case_trace",
+            "log_id": "copy the exact resolvable dataset identifier stated in the question into every tool call; never invent, guess, translate, or default one; if the question states no dataset identifier, request nothing and return UNAVAILABLE",
             "prediction, probability, forecast, recommendation": "immediately return final UNAVAILABLE without any tool call; historical counts are not predictive facts",
             "sla_*": "describe_log with sla_threshold_ms only when the question explicitly states a configured threshold; copy that exact threshold",
-            "transition_N": "list_transitions; include from_activity or to_activity only when that exact filter is stated in the question; otherwise omit them, never send null",
-            "variant_N": "list_variants with the requested order and limit N",
+            "transition_N": "list_transitions; 'most frequent' or 'top' means order_by transition_count_desc; include from_activity or to_activity only when that exact filter is stated in the question; otherwise omit them, never send null",
+            "variant_N": "list_variants; 'top' or 'descending case count' means order_by case_count_desc; copy the requested limit N",
         }
         return (
             "You are a bounded process-analysis agent. Process truth comes only from returned "
@@ -208,7 +236,10 @@ class GroundedAgent:
             "tools cannot provide the requested fact, return UNAVAILABLE with no facts or supporting "
             "IDs. For an ANSWERED question, your first response MUST request the minimal required "
             "tool. Omit every optional argument not explicitly required by the question; never send "
-            "null placeholders. In particular, p50 and p90 are percentile labels, never values for "
+            "null placeholders. Every tool call must carry the log_id copied exactly from the question, "
+            "character for character, without adding, removing, translating, or reformatting anything; "
+            "a dataset identifier is never invented, guessed, or defaulted, and a question "
+            "that names no dataset identifier cannot be answered from tools. In particular, p50 and p90 are percentile labels, never values for "
             "sla_threshold_ms. Use sla_threshold_ms only for an explicit configured SLA threshold. When all named "
             "facts have been returned, copy their complete fact objects exactly. For prediction, probability, "
             "forecast, or recommendation requests, the first response MUST be final UNAVAILABLE with no tool call. "

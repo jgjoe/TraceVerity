@@ -13,7 +13,7 @@ from piw.core import (
     transition_summary,
     variant_id,
 )
-from piw.xes import Event
+from piw.events import Event
 
 
 def event(

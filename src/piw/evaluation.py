@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -32,6 +33,31 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _reset_scratch_directory(workspace: Path, name: str) -> Path:
+    """Delete exactly one scratch subdirectory of `workspace`, failing loudly.
+
+    A scratch directory carries probe or build state from an earlier run, so a
+    removal that cannot complete must never be swallowed: a stale directory that
+    survives a cleanup would let a probe or a build read old state and still
+    report a pass. The target is pinned to the single direct child named `name`
+    — never the workspace itself and never a path that escapes it — and any
+    removal error propagates to the caller before the probe or build runs.
+    """
+
+    if not name or name in {".", ".."} or Path(name).name != name:
+        raise ValueError(f"scratch directory must be a plain name, not {name!r}")
+    resolved_workspace = workspace.resolve()
+    target = resolved_workspace / name
+    if target.parent != resolved_workspace:
+        raise ValueError(f"scratch directory escapes its workspace: {target}")
+    if target.is_symlink():
+        raise ValueError(f"refusing to reset a symlinked scratch path: {target}")
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True, exist_ok=True)
+    return target
 
 
 def _replace_placeholders(value: Any, context: dict[str, str]) -> Any:
@@ -187,6 +213,19 @@ def _wait_for_server(
     raise TimeoutError("llama-server did not become ready within the startup timeout")
 
 
+def _stop_process(process: subprocess.Popen[bytes]) -> None:
+    """Terminate a process this evaluation started, killing it if it will not exit."""
+
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=15)
+
+
 def _start_server(
     server_path: Path,
     model_path: Path,
@@ -225,7 +264,14 @@ def _start_server(
     try:
         _wait_for_server(process, base_url, startup_timeout, log_path)
     except Exception:
-        log_file.close()
+        # A server that never becomes ready must not be left running behind a
+        # failed startup: the process is stopped and the log closed before the
+        # readiness error reaches the caller. The log is closed even when the
+        # stop itself fails, so a failed stop never leaks the file handle too.
+        try:
+            _stop_process(process)
+        finally:
+            log_file.close()
         raise
     return process, log_file
 
@@ -465,12 +511,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
             )
     finally:
         if owned_server is not None:
-            owned_server.terminate()
-            try:
-                owned_server.wait(timeout=15)
-            except subprocess.TimeoutExpired:
-                owned_server.kill()
-                owned_server.wait(timeout=15)
+            _stop_process(owned_server)
         if log_file is not None:
             log_file.close()
 

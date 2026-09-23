@@ -24,6 +24,7 @@ test = [
 piw-slice0 = "piw.cli:main"
 piw-agent-eval = "piw.evaluation:main"
 piw-mcp-eval = "piw.mcp_evaluation:main"
+piw-generalization-eval = "piw.generalization_evaluation:main"
 piw-web = "piw.web:main"
 piw-analytics-export = "piw.analytics:main"
 
@@ -34,5 +35,5 @@ where = ["src"]
 addopts = "-ra -p no:cacheprovider"
 testpaths = ["tests"]
 markers = [
-  "integration: runs the full canonical BPIC12 pipeline",
+  "integration: runs the canonical pipeline against locally downloaded real sources",
 ]

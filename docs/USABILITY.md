@@ -1,25 +1,26 @@
-# Usability verification summary
+# Usability evidence scope
 
-TraceVerity completed a supervised usability gate on a Korean-localized,
-test-only surface.
+## Historical supervised analysis UI
 
-| Item | Result |
-|---|---|
-| Protocol | `cohort-01-ko-ui-v1` |
-| Tested revision | `29352c5f47af94fefc04f920e35002bc16b71168` |
-| Valid human participants | 3 |
-| Fixed tasks per participant | 3 |
-| Task results | 9/9 PASS |
-| Facilitator hints | 0 |
-| Material misunderstandings | 0 |
-| Gate | PASS |
+A historical Korean-localized, test-only analysis surface completed a supervised gate:
 
-The tested Korean surface matched the English default at that revision in
-functionality, data, layout structure, metric semantics, ordering, controls,
-Core/API behavior, and error semantics. **English UI copy itself was not
-usability-tested.** The later English visual polish shown in the public
-screenshots is presentation work after the qualifying test revision and is not
-described as the tested surface.
+- 3 valid humans
+- 3 fixed tasks per person
+- 3/3 tasks passed by each participant
+- 0 facilitator hints
+- 0 material misunderstandings
+- exact tested revision: `29352c5f47af94fefc04f920e35002bc16b71168`
 
-Raw participant records, complete answers, think-aloud material, and detailed
-individual behavior notes remain private and are not distributed.
+The later English/current visual surface was not that tested surface. The historical result therefore supports only the bounded analysis tasks and revision above.
+
+## Current browser onboarding
+
+Recovery Slice F prepared a human onboarding cohort but did not run it.
+
+- current CSV/XES/XES.GZ browser onboarding human-tested: **false**
+- Recovery Slice F cohort: **NOT_RUN**
+- automated Playwright onboarding coverage: present
+
+Automated coverage proves product behavior, not human usability. No README, portfolio copy, screenshot caption, or release record may imply that the current onboarding flow passed a human usability study.
+
+Detailed participant records remain private and are not included in this public repository.

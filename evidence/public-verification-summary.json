@@ -1,116 +1,140 @@
 {
-  "schema_version": "traceverity-public-verification-v1",
+  "schema_version": "traceverity-public-verification-v2",
   "product": {
     "name": "TraceVerity — Process Intelligence Workbench",
-    "version": "0.1.0",
-    "canonical_source_revision": "88a627d585c75ec5cdffaad5ec94f2f58fb8aaea"
-  },
-  "source": {
-    "dataset": "BPI Challenge 2012",
-    "doi": "10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f",
-    "filename": "BPI_Challenge_2012.xes.gz",
-    "sha256": "5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3",
-    "size_bytes": 3342406,
-    "licence": "4TU General Terms of Use",
-    "dataset_bundled": false
+    "product_baseline_revision": "f4da118f7f8f8df9beedf0c8b00e1f9bc14fb535"
   },
   "contracts": {
     "metric_definition_version": "slice0-metrics-v1",
-    "tool_schema_version": "slice1-tool-v1",
-    "http_contract_version": "slice2-http-v1",
-    "analytics_export_version": "slice3-powerbi-export-v1",
-    "mcp_sdk_version": "2.2.0",
-    "mcp_protocol_version": "2026-07-28"
+    "import_contract_version": "dataset-import-v1",
+    "tool_schema_version": "slice-d-tool-v2",
+    "http_contract_version": "slice-c-http-v2",
+    "analytics_export_version": "slice3-powerbi-export-v1"
   },
-  "core": {
-    "status": "PASS",
-    "invariant_count": 17,
-    "aggregate_facts": {
-      "case_count": 13087,
-      "raw_event_count": 262200,
-      "analysis_event_count": 164506,
-      "variant_count": 4336,
-      "direct_follow_count": 151419,
-      "cases_with_rework": 7019,
-      "aggregate_rework_event_count": 57556,
-      "configured_sla_threshold_ms": 604800000,
-      "configured_sla_violation_case_count": 5378,
-      "configured_sla_violation_case_share": 0.410942156338
+  "datasets": {
+    "bpic2012": {
+      "display_name": "BPI Challenge 2012",
+      "author": "Boudewijn van Dongen",
+      "doi": "10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f",
+      "licence_label": "4TU General Terms of Use",
+      "source_format": "xes.gz",
+      "expected_filename": "BPI_Challenge_2012.xes.gz",
+      "source_sha256": "5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3",
+      "raw_source_bundled": false,
+      "aggregates": {
+        "case_count": 13087,
+        "raw_event_count": 262200,
+        "analysis_event_count": 164506,
+        "distinct_activity_count": 24,
+        "variant_count": 4336,
+        "direct_follow_count": 151419,
+        "cases_with_rework": 7019,
+        "aggregate_rework_event_count": 57556
+      }
     },
-    "caveats": {
-      "observed_gap_is_true_queue_waiting": false,
-      "configured_threshold_is_claimed_business_sla": false
+    "helpdesk": {
+      "display_name": "Dataset belonging to the help desk log of an Italian Company",
+      "author": "Mirko Polato",
+      "doi": "10.4121/uuid:0c60edf1-6f83-4e75-9367-4c63b3e9d5bb",
+      "licence_label": "4TU General Terms of Use",
+      "source_format": "csv",
+      "expected_filename": "finale.csv",
+      "source_sha256": "31024fa6da0a35578643d50f2bea6e90d5ce97628b64851e271b521f005eef1c",
+      "raw_source_bundled": false,
+      "csv_mapping": {
+        "case_id": "Case ID",
+        "activity": "Activity",
+        "timestamp": "Complete Timestamp",
+        "resource": "Resource",
+        "lifecycle": null
+      },
+      "timestamp_interpretation": {
+        "timestamp_format": "%Y/%m/%d %H:%M:%S.%f",
+        "assume_timezone": "UTC",
+        "note": "UTC is a deterministic normalization convention; the source timezone is not claimed from documentation."
+      },
+      "aggregates": {
+        "case_count": 4580,
+        "raw_event_count": 21348,
+        "analysis_event_count": 21348,
+        "distinct_activity_count": 14,
+        "variant_count": 226,
+        "direct_follow_count": 16768,
+        "cases_with_rework": 1240,
+        "aggregate_rework_event_count": 1905,
+        "top_variant_count": 2366,
+        "resolve_ticket_to_closed_count": 4558,
+        "take_in_charge_ticket_rework_event_count": 775,
+        "case_1_raw_event_count": 5,
+        "default_configured_sla": false
+      }
     }
   },
-  "current_regression": {
-    "pytest": {
-      "status": "PASS",
-      "passed": 48
-    },
-    "web_production_build": {
+  "regression": {
+    "baseline": "Recovery Slice E",
+    "python": {
+      "passed": 190,
+      "total": 190,
       "status": "PASS"
     },
-    "web_playwright": {
-      "status": "PASS",
-      "passed": 1,
-      "total": 1
+    "web_build": "PASS",
+    "playwright": {
+      "passed": 2,
+      "total": 2,
+      "status": "PASS"
     }
   },
-  "agent_direct_route": {
-    "status": "PASS",
-    "passed": 10,
-    "total": 10,
-    "grounding_violation_count": 0,
-    "forbidden_action_count": 0,
-    "forbidden_attempt_count": 0
-  },
-  "mcp_route": {
-    "status": "PASS",
-    "transport": "stdio",
-    "tool_count": 5,
-    "schema_equivalence_passed": true,
-    "subprocess_cleanup_passed": true,
-    "passed": 10,
-    "total": 10,
-    "grounding_violation_count": 0,
-    "forbidden_action_count": 0,
-    "forbidden_attempt_count": 0
-  },
-  "power_bi_local_validation": {
-    "status": "PASS",
-    "refresh_verified": true,
-    "open_save_reopen_verified": true,
-    "model_row_counts": {
-      "Summary": 1,
-      "Activities": 23,
-      "Cases": 13087,
-      "Transitions": 138,
-      "Variants": 4336
+  "agent_mcp": {
+    "advertised_read_only_tool_count": 5,
+    "direct_agent": {
+      "passed": 12,
+      "total": 12
     },
-    "pbix_bundled": false
+    "mcp_agent": {
+      "passed": 12,
+      "total": 12
+    },
+    "direct_mcp_contract": {
+      "passed": 22,
+      "total": 22,
+      "mismatch_count": 0
+    },
+    "grounding_violation_count": 0,
+    "forbidden_action_violation_count": 0
+  },
+  "failure_boundary": {
+    "deterministic_status": "PASS",
+    "path_leak_scan": {
+      "responses_scanned": 179,
+      "leak_count": 0
+    },
+    "malformed_or_inconsistent_local_state": "FAILS_CLOSED"
   },
   "usability": {
-    "status": "PASS",
-    "protocol_version": "cohort-01-ko-ui-v1",
-    "tested_revision": "29352c5f47af94fefc04f920e35002bc16b71168",
-    "tested_surface": "korean-localized-test-only",
-    "valid_participants": 3,
-    "tasks_per_participant": 3,
-    "total_task_passes": 9,
-    "facilitator_hint_count": 0,
-    "material_misunderstanding_count": 0,
-    "english_ui_copy_tested": false,
-    "later_english_visual_polish_tested": false
+    "historical_analysis_ui": {
+      "valid_humans": 3,
+      "tasks_per_human": 3,
+      "status": "PASS",
+      "exact_tested_revision": "29352c5f47af94fefc04f920e35002bc16b71168"
+    },
+    "historical_surface_is_current_onboarding": false,
+    "browser_onboarding_human_tested": false,
+    "recovery_slice_f_cohort": "NOT_RUN"
+  },
+  "power_bi": {
+    "historical_bpic2012_only_verification": true,
+    "generic_power_bi": false
   },
   "distribution_boundary": {
-    "full_local_evidence_excluded": true,
-    "raw_usability_records_excluded": true,
-    "source_dataset_excluded": true,
-    "duckdb_excluded": true,
+    "raw_datasets_excluded": true,
+    "generated_duckdb_excluded": true,
     "generated_analytics_csv_excluded": true,
+    "private_usability_evidence_excluded": true,
     "pbix_excluded": true,
-    "public_candidate_reproduces_core_web_mcp_contract_tests_and_analytics": true,
-    "full_slice5_evaluator_requires_excluded_protected_local_artifacts": true,
-    "full_local_evidence_reproduction_scope": "canonical-local-workspace"
+    "local_model_excluded": true
+  },
+  "evidence": {
+    "slice_e_report_schema_version": "recovery-slice-e-regression-v1",
+    "slice_e_report_sha256": "a94219d0f6fbdb55082065162e72881ed1efd4e8b96d25a528564e04e9fa0e5a"
   }
 }

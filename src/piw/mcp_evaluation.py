@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .agent import GroundedAgent, LlamaServerClient, ToolRuntime
+from .datasets import DEFAULT_REGISTRY_ROOT
 from .evaluation import (
     _binary_version,
     _compare_answer,
@@ -136,13 +137,13 @@ def _run_route(
         "passed": passed_count,
         "provenance_hydration_count": provenance_hydration_count,
         "rejected_grounding_attempt_count": rejected_grounding_attempt_count,
-        "required_passes": 10,
+        "required_passes": len(results),
         "total": len(results),
     }
     aggregate["passed_gate"] = all(
         [
-            aggregate["passed"] == 10,
-            aggregate["total"] == 10,
+            aggregate["passed"] == aggregate["required_passes"],
+            aggregate["total"] == aggregate["required_passes"],
             accepted_tool_call_mismatch_count == 0,
             grounding_violation_count == 0,
             forbidden_action_count == 0,
@@ -313,7 +314,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         if not required.is_file():
             raise FileNotFoundError(required)
 
-    direct = CoreToolSurface(database_path)
+    direct = CoreToolSurface(database_path, args.registry_root)
     context = _evaluation_context(database_path, direct)
     raw_cases = json.loads(cases_path.read_text(encoding="utf-8"))
     cases = [_replace_placeholders(case, context) for case in raw_cases["cases"]]
@@ -348,7 +349,9 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         )
         direct_route = _run_route(direct, client, direct, cases)
         mcp_runtime = McpToolRuntime(
-            database_path, request_timeout_seconds=args.request_timeout
+            database_path,
+            args.registry_root,
+            request_timeout_seconds=args.request_timeout,
         )
         protocol_version = mcp_runtime.protocol_version
         advertised_definitions = mcp_runtime.definitions()
@@ -435,6 +438,12 @@ def parser() -> argparse.ArgumentParser:
     )
     command.add_argument(
         "--database", type=Path, default=Path("data/processed/bpic2012.duckdb")
+    )
+    command.add_argument(
+        "--registry-root",
+        type=Path,
+        default=DEFAULT_REGISTRY_ROOT,
+        help="Local dataset registry workspace shared by the direct and MCP routes",
     )
     command.add_argument(
         "--cases", type=Path, default=Path("evaluation/slice1-cases.json")

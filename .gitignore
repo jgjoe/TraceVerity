@@ -7,9 +7,12 @@ __pycache__/
 .env
 .env.*
 
-# Dataset and generated local analytical state
+# Raw sources, imported sources, registries, and generated analytical state
 data/raw/
 data/processed/
+data/datasets/
+data/imports/
+data/e2e/
 *.duckdb
 *.duckdb.wal
 analytics/powerbi/data/
@@ -27,6 +30,12 @@ web/playwright-report/
 # Public distribution exposes only the curated aggregate summary.
 evidence/*
 !evidence/public-verification-summary.json
+
+# Private/internal project state
+memory/
+.claude/
+.omp/
+evidence/usability/
 
 # Local tooling/editor artifacts
 .idea/

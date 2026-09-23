@@ -9,14 +9,19 @@ import mcp.types as types
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
+from .datasets import DEFAULT_REGISTRY_ROOT
 from .tools import CoreToolSurface, canonical_json
 
 SERVER_NAME = "process-intelligence-workbench"
 SERVER_VERSION = "0.1.0"
 
 
-def create_server(database_path: Path) -> Server[Any]:
-    surface = CoreToolSurface(database_path)
+def create_server(
+    database_path: Path, registry_root: Path = DEFAULT_REGISTRY_ROOT
+) -> Server[Any]:
+    """Expose the exact Core tool surface for the canonical database and registry."""
+
+    surface = CoreToolSurface(database_path, registry_root)
 
     async def list_tools(
         _context: Any, _params: types.PaginatedRequestParams | None
@@ -50,8 +55,8 @@ def create_server(database_path: Path) -> Server[Any]:
     )
 
 
-async def serve(database_path: Path) -> None:
-    server = create_server(database_path)
+async def serve(database_path: Path, registry_root: Path) -> None:
+    server = create_server(database_path, registry_root)
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
@@ -63,6 +68,12 @@ async def serve(database_path: Path) -> None:
 def parser() -> argparse.ArgumentParser:
     command = argparse.ArgumentParser(description="Run the PIW MCP stdio server.")
     command.add_argument("--database", type=Path, required=True)
+    command.add_argument(
+        "--registry-root",
+        type=Path,
+        default=DEFAULT_REGISTRY_ROOT,
+        help="Local dataset registry workspace used to resolve registered log_id values",
+    )
     return command
 
 
@@ -71,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     database_path = args.database.resolve()
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
-    asyncio.run(serve(database_path))
+    asyncio.run(serve(database_path, args.registry_root.resolve()))
     return 0
 
 
