@@ -4,6 +4,8 @@ TraceVerity is a local-first Process Intelligence product. In the browser, a use
 
 **AI never defines authoritative process metrics.** The browser, Direct Agent, and stdio MCP resolve datasets through the same Core-backed read path. The historical Power BI proof consumes a deterministic BPIC12 export rather than independently defining process metrics.
 
+**Stack / value:** Python · DuckDB · FastAPI · React · Playwright · MCP — one deterministic process-metric core shared by browser and agent surfaces, with reproducible checks against two public event logs.
+
 ![Browser import controls open above the same deterministic workbench analyzing the imported Italian Help Desk dataset](docs/images/traceverity-overview.png)
 
 ## One process-truth boundary
@@ -74,7 +76,7 @@ Direct Agent and stdio MCP use the same schemas, `DatasetResolver`, and `CoreRea
 
 ## Verification
 
-Independent Recovery Slice E verification on canonical baseline `f4da118f7f8f8df9beedf0c8b00e1f9bc14fb535` recorded:
+Independent end-to-end verification recorded:
 
 | Gate | Result |
 |---|---:|
@@ -87,11 +89,15 @@ Independent Recovery Slice E verification on canonical baseline `f4da118f7f8f8df
 | Grounding / forbidden-action violations | 0 / 0 |
 | Machine-path scan | 179 responses, 0 leaks |
 
-The canonical Slice E report SHA-256 is `a94219d0f6fbdb55082065162e72881ed1efd4e8b96d25a528564e04e9fa0e5a`. The aggregate-only public record uses schema `traceverity-public-verification-v2`.
-
-The sanitized public tree passes **168 / 168 Python tests**. It intentionally excludes canonical-only Help Desk evidence integration, model-backed Agent/MCP re-derivation, protected-artifact/PBIX regression, and historical evidence checks. The independent Slice E 190/190 result remains published aggregate evidence; it is not represented as the public-tree test count. Details: [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
+The public tree passes **168 / 168 Python tests**. The larger independent run also covered local evidence integrations and model-backed Agent/MCP re-derivation that are intentionally absent from the public package. The aggregate public record is in [`evidence/public-verification-summary.json`](evidence/public-verification-summary.json); details are in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
 
 ## Local reproduction
+
+### Data prerequisites
+
+- Raw datasets are **not bundled**. Obtain BPI Challenge 2012 and/or the Italian Help Desk log from their original public providers and keep them under the ignored local `data/` tree.
+- Exact expected filenames, fingerprints, attribution, and the Help Desk CSV mapping are documented in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
+- Model-backed Agent/MCP evaluation is optional and additionally requires a local `llama.cpp` runtime and model file.
 
 ```powershell
 uv sync --extra test
@@ -104,16 +110,16 @@ npm run build
 npm run test:e2e
 ```
 
-The sources must be obtained separately. Full BPIC12 baseline, generic browser onboarding, optional real Help Desk reproduction, Agent/MCP checks, and the historical Power BI path are separated in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
+Full BPIC12 baseline, generic browser onboarding, optional real Help Desk reproduction, Agent/MCP checks, and the historical Power BI path are separated in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
 
 ## Boundaries
 
 - Local-first single-user workbench; no cloud/SaaS, authentication, multi-user, or enterprise-scale claim.
-- Generic browser/Core/Agent/MCP support covers registered datasets. Power BI remains a historical BPIC12-specific proof, not generic Power BI.
+- Browser/Core/Agent/MCP flows are implemented for registered CSV/XES/XES.GZ datasets that satisfy the documented import contract. The two published real-data validations demonstrate portability across those datasets; they are not a claim of universal compatibility with every event-log variant. Power BI remains a historical BPIC12-specific proof.
 - No predictive process mining or BPMN/Petri-net discovery claim.
 - Observed event gap is **not** true queue or waiting time.
 - Configured thresholds are analytical scenarios, **not** actual business SLAs. Help Desk has no default configured threshold.
-- Historical analysis-UI usability passed with three valid humans at revision `29352c5f47af94fefc04f920e35002bc16b71168`. Current browser onboarding has **not** completed a human usability cohort.
+- Historical analysis-UI usability passed with three valid participants. Current browser onboarding has **not** completed a human usability cohort.
 
 ![Current trust caveats for observed event gap and configured thresholds](docs/images/traceverity-trust-caveats.png)
 
