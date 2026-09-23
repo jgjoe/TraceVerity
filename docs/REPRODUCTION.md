@@ -11,22 +11,7 @@ npm ci
 Set-Location ..
 ```
 
-## A. BPIC12 baseline reproduction
-
-- Dataset: BPI Challenge 2012
-- Author: Boudewijn van Dongen
-- DOI: `10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f`
-- Licence label: `4TU General Terms of Use`
-- Expected file: `data/raw/BPI_Challenge_2012.xes.gz`
-- Expected SHA-256: `5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3`
-
-```powershell
-uv run piw-slice0
-```
-
-Expected baseline: 13,087 cases, 262,200 raw events, 164,506 analysis events, 24 activities, 4,336 variants, and 151,419 direct-follow occurrences. A wrong source fingerprint or failed invariant produces `HOLD`.
-
-## B. Generic browser onboarding
+## A. Generic browser onboarding
 
 Build and start the current product:
 
@@ -56,7 +41,7 @@ npm run test:e2e
 Set-Location ..
 ```
 
-## C. Optional real Help Desk reproduction
+## B. Optional real Help Desk reproduction
 
 Obtain the source separately from its public data provider.
 
@@ -81,6 +66,21 @@ Canonical CSV mapping:
 `UTC` is a deterministic normalization convention. TraceVerity does not claim the source timezone was established by the dataset documentation.
 
 Expected aggregates include 4,580 cases, 21,348 raw and analysis events, 14 activities, 226 variants, 16,768 direct-follow occurrences, 1,240 cases with rework, and 1,905 aggregate rework events. No default configured SLA scenario exists.
+
+## C. BPIC12 baseline reproduction
+
+- Dataset: BPI Challenge 2012
+- Author: Boudewijn van Dongen
+- DOI: `10.4121/uuid:3926db30-f712-4394-aebc-75976070e91f`
+- Licence label: `4TU General Terms of Use`
+- Expected file: `data/raw/BPI_Challenge_2012.xes.gz`
+- Expected SHA-256: `5cd9cc16b9bcb20bd4aae45666a5d87479ddbf47e6371618b6ad217174cecdf3`
+
+```powershell
+uv run piw-slice0
+```
+
+Expected baseline: 13,087 cases, 262,200 raw events, 164,506 analysis events, 24 activities, 4,336 variants, and 151,419 direct-follow occurrences. A wrong source fingerprint or failed invariant produces `HOLD`.
 
 ## D. Agent and MCP verification
 

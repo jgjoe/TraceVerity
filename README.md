@@ -1,10 +1,10 @@
 # TraceVerity — Process Intelligence Workbench
 
-TraceVerity is a local-first Process Intelligence workbench that imports, maps, validates, and analyzes CSV, XES, and XES.GZ event logs through one deterministic Python/DuckDB Core proven across two real business processes.
+TraceVerity is a local-first Process Intelligence product. In the browser, a user can import a local CSV, XES, or XES.GZ event log, map and validate it, then immediately analyze it in the same deterministic Python/DuckDB-backed workbench proven across two real business processes.
 
 **AI never defines authoritative process metrics.** The browser, Direct Agent, and stdio MCP resolve datasets through the same Core-backed read path. The historical Power BI proof consumes a deterministic BPIC12 export rather than independently defining process metrics.
 
-![TraceVerity overview with the BPIC12 Dataset Workspace selected](docs/images/traceverity-overview.png)
+![Browser import controls open above the same deterministic workbench analyzing the imported Italian Help Desk dataset](docs/images/traceverity-overview.png)
 
 ## One process-truth boundary
 
@@ -35,7 +35,7 @@ Current contracts:
 
 ## Browser onboarding
 
-The Dataset Workspace supports local `.csv`, `.xes`, and `.xes.gz` files. A user previews source identity, maps CSV fields explicitly, states timestamp format/timezone interpretation, validates the source, and only then registers a ready dataset. The workbench can switch between registered datasets without changing the Core semantics.
+The Dataset Workspace supports local `.csv`, `.xes`, and `.xes.gz` files. A user previews source identity, maps CSV fields explicitly, states timestamp format/timezone interpretation, validates the source, and only then registers a ready dataset. The same workbench then immediately analyzes the selected dataset without changing Core semantics.
 
 ![The real Help Desk CSV imported and selected with 4,580 cases and no configured SLA card](docs/images/traceverity-helpdesk-onboarding.png)
 
